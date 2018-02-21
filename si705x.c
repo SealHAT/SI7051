@@ -6,17 +6,17 @@ static struct i2c_m_sync_desc si705x_sync;
 static uint8_t readReg(const uint8_t REG)
 {
     uint8_t retval;
-    i2c_m_sync_cmd_read(&max44009_sync, REG, &retval, 1);
+    i2c_m_sync_cmd_read(&si705x_sync, REG, &retval, 1);
     return retval;
 }
 
 /* write a single register */
 static void writeReg(const uint8_t REG, uint8_t val)
 {
-    i2c_m_sync_cmd_write(&max44009_sync, REG, &val, 1);
+    i2c_m_sync_cmd_write(&si705x_sync, REG, &val, 1);
 }
 
-bool si705x_init(struct i2c_m_async_desc* const WIRE_I2C)
+bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C)
 {
 
 }

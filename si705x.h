@@ -15,7 +15,7 @@
  * @param WIRE_I2C [IN] The device structure to use for the sensor (I2C Syncronous)
  * @return True if successful, false if not. Any error is likely due to I2C
  */
-bool si705x_init(struct i2c_m_async_desc* const WIRE_I2C);
+bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C);
 
 /** @brief Set the resolution of the temperature sensor
  *

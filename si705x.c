@@ -49,7 +49,7 @@ uint16_t si705x_measure()
 	}
 
 	msg.flags  = I2C_M_STOP | I2C_M_RD;
-	msg.buffer = &ret;
+	msg.buffer = (uint8_t*)&ret;
 	msg.len    = 2;
 	do{
 		err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);

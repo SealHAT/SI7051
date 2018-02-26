@@ -37,7 +37,7 @@ bool si705x_set_resolution(const uint8_t RES);
  * @param MASTER_HOLD [IN] Use master hold mode if true, otherwise do not
  * @return 0 if successful, -1 if not. Any error is likely due to I2C
  */
-uint16_t si705x_measure(const bool MASTER_HOLD);
+uint16_t si705x_measure();
 
 /** @brief convert a raw reading into degrees celsius
  *
@@ -45,6 +45,13 @@ uint16_t si705x_measure(const bool MASTER_HOLD);
  * @return the temperature in degrees celsius
  */
 inline float si705x_celsius(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
+
+/** @brief convert a raw reading into degrees celsius
+ *
+ * @param READING [IN] raw reading obtained from si507x_measure()
+ * @return the temperature in degrees celsius
+ */
+inline int si705x_celsiusInt(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
 
 /** @brief Gets the voltage warning bit from the sensor
  *

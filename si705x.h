@@ -35,7 +35,7 @@ bool si705x_set_resolution(const uint8_t RES);
  * TODO write description
  *
  * @param MASTER_HOLD [IN] Use master hold mode if true, otherwise do not
- * @return True if successful, false if not. Any error is likely due to I2C
+ * @return 0 if successful, -1 if not. Any error is likely due to I2C
  */
 uint16_t si705x_measure(const bool MASTER_HOLD);
 
@@ -65,7 +65,7 @@ bool si705x_voltage_ok();
  *
  * @return the hex value of the firmware register.
  */
-uint32_t si705x_fw_version();
+uint8_t si705x_fw_version();
 
 /** @brief perform a software reset of the device
  *
@@ -74,6 +74,6 @@ uint32_t si705x_fw_version();
  *
  * @return True if successful, false if not. Any error is likely due to I2C
  */
-float si705x_reset();
+void si705x_reset();
 
 #endif    /* __SI705X_H__ */

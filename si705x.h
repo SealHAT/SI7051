@@ -46,13 +46,6 @@ uint16_t si705x_measure();
  */
 inline float si705x_celsius(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
 
-/** @brief convert a raw reading into degrees celsius
- *
- * @param READING [IN] raw reading obtained from si507x_measure()
- * @return the temperature in degrees celsius
- */
-inline int si705x_celsiusInt(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
-
 /** @brief Gets the voltage warning bit from the sensor
  *
  * The sensor will set a bit high if the voltage drops below 1.9 volts, but the

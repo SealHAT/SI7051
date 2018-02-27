@@ -36,6 +36,7 @@ uint16_t si705x_measure()
 	int32_t			err;
 	uint16_t        ret = -1;
 	uint8_t			Reg = TEMP_MEASURE_NOHOLD;
+	
 	msg.addr   = si705x_sync.slave_addr;
 	msg.len    = 1;
 	msg.flags  = 0;
@@ -56,7 +57,7 @@ uint16_t si705x_measure()
 	
 	} while (err != 0);
 
-	return ret;
+	return (ret << 8) | (ret >> 8);
 }
 
 bool si705x_voltage_ok()

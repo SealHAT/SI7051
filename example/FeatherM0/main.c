@@ -25,14 +25,14 @@ int main(void)
 		celc    = si705x_celsius(rawTemp);
 		whole   = (int)celc;
 		decimal = (celc * TEMP_PRECISION) - (whole * TEMP_PRECISION);
-		
-		sprintf(message, "Raw: %#.4X    Temp: %d.%d\n", rawTemp, whole, decimal);
+					
+		sprintf(message, "SI7051: 0x%.4X (%d.%d %cC)\n", rawTemp, whole, decimal, 0xB0);
 		
 		/* If the host has a terminal open then try to read, and if we read send it back */
-		if(usb_dtr()) {
+		if(usb_dtr()) {								
 			usb_send_buffer((uint8_t*)message, strlen(message));
 		}
 
-		delay_ms(100);
+		delay_ms(1000);
 	}
 }

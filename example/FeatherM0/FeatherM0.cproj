@@ -460,6 +460,18 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\si705x.c">
+      <SubType>compile</SubType>
+      <Link>si705x.c</Link>
+    </Compile>
+    <Compile Include="..\..\si705x.h">
+      <SubType>compile</SubType>
+      <Link>si705x.h</Link>
+    </Compile>
+    <Compile Include="..\..\si705xTypes.h">
+      <SubType>compile</SubType>
+      <Link>si705xTypes.h</Link>
+    </Compile>
     <Compile Include="atmel_start.c">
       <SubType>compile</SubType>
     </Compile>

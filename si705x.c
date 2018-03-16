@@ -76,11 +76,13 @@ bool si705x_voltage_ok()
 
 uint8_t si705x_fw_version()
 {
+    uint8_t fwVer = 0;
 	if (readReg(TEMP_READ_FW_VER1) == TEMP_FW1){
-		return TEMP_FW1;
+		fwVer = TEMP_FW1;
 	}else if (readReg(TEMP_READ_FW_VER2) == TEMP_FW2){
-		return TEMP_FW2;
+		fwVer = TEMP_FW2;
 	}
+    return fwVer;
 }
 
 void si705x_reset()

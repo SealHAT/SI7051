@@ -12,7 +12,7 @@
  * to use on the device. The address of this device is fixed and so is not a
  * parameter.
  *
- * @param WIRE_I2C [IN] The device structure to use for the sensor (I2C Syncronous)
+ * @param WIRE_I2C [IN] The device structure to use for the sensor (I2C Synchronous)
  * @return True if successful, false if not. Any error is likely due to I2C
  */
 bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C);
@@ -32,17 +32,15 @@ bool si705x_set_resolution(const uint8_t RES);
 
 /** @brief Obtain a temperature measurement from the sensor
  *
- * TODO write description
- *
- * @param MASTER_HOLD [IN] Use master hold mode if true, otherwise do not
- * @return 0 if successful, -1 if not. Any error is likely due to I2C
+ * @param error [OUT] pointer to an int32_t value to catch errors. 0 on success, -1 is comm error, -2 is failed CRC.
+ * @return the raw reading from the sensor
  */
-uint16_t si705x_measure();
+uint16_t si705x_measure(int32_t* error);
 
-/** @brief convert a raw reading into degrees celsius
+/** @brief convert a raw reading into degrees Celsius
  *
  * @param READING [IN] raw reading obtained from si507x_measure()
- * @return the temperature in degrees celsius
+ * @return the temperature in degrees Celsius
  */
 inline float si705x_celsius(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
 

@@ -30,14 +30,43 @@ bool si705x_set_resolution(const SI705X_RESOLUTIONS_t RES)
 	return true;	
 }
 
-uint16_t si705x_measure() 
+static uint8_t bitswap(uint8_t input){
+    unsigned char output = 0;
+    for (int k = 0; k < 8; k++) {
+        output |= ((input >> k) & 0x01) << (7 - k);
+    }
+    return output;
+}
+
+static uint8_t crc8(void* inData, uint8_t len, uint8_t init){
+    uint8_t* data = (uint8_t*)inData;
+    uint8_t crc = bitswap(init);
+
+    for (int i=0; i<len;i++)
+    {
+        uint8_t inbyte = bitswap(data[i]);
+        for (uint8_t j=0;j<8;j++)
+        {
+            uint8_t mix = (crc ^ inbyte) & 0x01;
+            crc >>= 1;
+            if (mix)
+            crc ^= 0x8C;
+
+            inbyte >>= 1;
+        }
+    }
+    return bitswap(crc);
+}
+
+
+uint16_t si705x_measure(int32_t* error)
 {
 	struct _i2c_m_msg msg;
 	int32_t			err;
-	uint16_t        ret = -1;
-	uint8_t			Reg = TEMP_MEASURE_NOHOLD;
+    uint8_t         buf[3];
+	uint8_t			Reg    = TEMP_MEASURE_NOHOLD;
 	
-	msg.addr   = si705x_sync.slave_addr;
+    msg.addr   = si705x_sync.slave_addr;
 	msg.len    = 1;
 	msg.flags  = 0;
 	msg.buffer = &Reg;
@@ -46,18 +75,29 @@ uint16_t si705x_measure()
 
 	if (err != 0) {
 		/* error occurred */
-		return ret;
+        if(error != NULL) {
+		    *error = -1;
+        }
+        return 0;
 	}
 
 	msg.flags  = I2C_M_STOP | I2C_M_RD;
-	msg.buffer = (uint8_t*)&ret;
-	msg.len    = 2;
+	msg.buffer = buf;
+	msg.len    = 3;     // two for temp, 3 for temp plus checksum
 	do{
 		err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);
-	
 	} while (err != 0);
 
-	return (ret << 8) | (ret >> 8);
+    if(error != NULL) {
+        if(crc8(buf, 2, 0x00) == buf[2]) {
+            *error = 0;
+        }
+        else {
+            *error = -2;
+        }   
+    }
+
+	return (buf[0] << 8) | buf[1];
 }
 
 bool si705x_voltage_ok()

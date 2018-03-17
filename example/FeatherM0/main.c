@@ -10,7 +10,8 @@ int main(void)
 	char message[MESSAGE_SIZE];
 	float celc;
 	int whole, decimal;
-	uint16_t rawTemp;
+	uint16_t reading;
+
     int32_t err;
 	
 	/* Initializes MCU, drivers and middleware */
@@ -22,13 +23,18 @@ int main(void)
 		    /* Turn on LED if the DTR signal is set (serial terminal open on host) */
 		    gpio_set_pin_level(LED_BUILTIN, usb_dtr());
 		
-		    rawTemp = si705x_measure();
-		    celc    = si705x_celsius(rawTemp);
+		    reading = si705x_measure(&err);
+		    celc    = si705x_celsius(reading);
 		    whole   = (int)celc;
 		    decimal = (celc * TEMP_PRECISION) - (whole * TEMP_PRECISION);
-					
-		    sprintf(message, "%d.%d,0x%.4X\n",whole, decimal, rawTemp);
-		
+			
+            if(err < 0) {
+		        sprintf(message, "%d.%d,0x%.4X,INVALID\n",whole, decimal, reading);
+		    }
+            else {
+                sprintf(message, "%d.%d,0x%.4X,GOOD\n",whole, decimal, reading);
+            }
+
 		    /* If the host has a terminal open then try to read, and if we read send it back */
 		    if(usb_dtr()) {
                 do {					

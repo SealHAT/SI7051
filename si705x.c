@@ -58,6 +58,45 @@ static uint8_t crc8(void* inData, uint8_t len, uint8_t init){
     return bitswap(crc);
 }
 
+int32_t si705x_measure_asyncStart(void)
+{
+    struct _i2c_m_msg msg;
+    uint8_t			Reg    = TEMP_MEASURE_NOHOLD;
+    	
+    msg.addr   = si705x_sync.slave_addr;
+    msg.len    = 1;
+    msg.flags  = 0;
+    msg.buffer = &Reg;
+
+    return _i2c_m_sync_transfer(&si705x_sync.device, &msg);
+}
+
+uint16_t si705x_measure_asyncGet(int32_t* error)
+{
+    struct _i2c_m_msg msg;
+    int32_t			err;
+    uint8_t         buf[3];
+
+    msg.addr   = si705x_sync.slave_addr;
+    msg.flags  = I2C_M_STOP | I2C_M_RD;
+    msg.buffer = buf;
+    msg.len    = 3;     // two for temp, 3 for temp plus checksum
+    
+    do{
+        err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);
+    } while (err != 0);
+
+    if(error != NULL) {
+        if(crc8(buf, 2, 0x00) == buf[2]) {
+            *error = 0;
+        }
+        else {
+            *error = -2;
+        }
+    }
+
+    return (buf[0] << 8) | buf[1];
+}
 
 uint16_t si705x_measure(int32_t* error)
 {

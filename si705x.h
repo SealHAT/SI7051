@@ -30,7 +30,28 @@ bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C);
  */
 bool si705x_set_resolution(const uint8_t RES);
 
-/** @brief Obtain a temperature measurement from the sensor
+/** @brief request a measurement from the sensor asynchronously
+ *
+ * A reading will take approx 7-8 mSec at full resolution. This function takes about
+ * 100uSec (tested on 12MHz core with 400k I2C bus). the remaining time can be used
+ * to run other tasks. The function si705x_measure_asyncGet() must be called later
+ * to obtain the reading.
+ *
+ * @return 0 if successful, otherwise an error value
+ */
+int32_t si705x_measure_asyncStart(void);
+
+/** @brief Obtain a previously requested asynchronous measurement
+ *
+ * This function gets a previously requested asynchronous measurement. If the reading is not
+ * ready yet (was called too early) this function will block until the reading is ready and read.
+ *
+ * @param error [OUT] pointer to an int32_t value to catch errors. 0 on success, -1 is comm error, -2 is failed CRC.
+ * @return the raw reading from the sensor
+ */
+uint16_t si705x_measure_asyncGet(int32_t* err);
+
+/** @brief Obtain a temperature measurement from the sensor synchronously
  *
  * @param error [OUT] pointer to an int32_t value to catch errors. 0 on success, -1 is comm error, -2 is failed CRC.
  * @return the raw reading from the sensor

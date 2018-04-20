@@ -63,7 +63,7 @@ uint16_t si705x_measure(int32_t* error);
  * @param READING [IN] raw reading obtained from si507x_measure()
  * @return the temperature in degrees Celsius
  */
-inline float si705x_celsius(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
+static inline float si705x_celsius(const uint16_t READING) { return ((175.72 * READING) / 65536) - 46.85; }
 
 /** @brief Gets the voltage warning bit from the sensor
  *

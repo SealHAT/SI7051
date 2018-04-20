@@ -65,7 +65,7 @@ int32_t si705x_measure_asyncStart(void)
 
     msg.addr   = si705x_sync.slave_addr;
     msg.len    = 1;
-    msg.flags  = 0;
+    msg.flags  = I2C_M_STOP;
     msg.buffer = &Reg;
 
     return _i2c_m_sync_transfer(&si705x_sync.device, &msg);

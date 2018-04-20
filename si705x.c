@@ -27,7 +27,7 @@ bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C)
 bool si705x_set_resolution(const SI705X_RESOLUTIONS_t RES)
 {
 	writeReg(TEMP_WRITE_USER1, RES);
-	return true;	
+	return true;
 }
 
 static uint8_t bitswap(uint8_t input){
@@ -62,7 +62,7 @@ int32_t si705x_measure_asyncStart(void)
 {
     struct _i2c_m_msg msg;
     uint8_t			Reg    = TEMP_MEASURE_NOHOLD;
-    	
+
     msg.addr   = si705x_sync.slave_addr;
     msg.len    = 1;
     msg.flags  = 0;
@@ -75,23 +75,27 @@ uint16_t si705x_measure_asyncGet(int32_t* error)
 {
     struct _i2c_m_msg msg;
     int32_t			err;
+    int32_t         timeout = 5;
     uint8_t         buf[3];
 
     msg.addr   = si705x_sync.slave_addr;
     msg.flags  = I2C_M_STOP | I2C_M_RD;
     msg.buffer = buf;
     msg.len    = 3;     // two for temp, 3 for temp plus checksum
-    
+
     do{
         err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);
-    } while (err != 0);
+    } while (err != 0 && timeout-- > 0);
 
     if(error != NULL) {
-        if(crc8(buf, 2, 0x00) == buf[2]) {
+        if(err != ERR_NONE) {
+            *error = err;
+        }
+        else if(crc8(buf, 2, 0x00) == buf[2]) {
             *error = 0;
         }
         else {
-            *error = -2;
+            *error = ERR_BAD_DATA;
         }
     }
 
@@ -104,7 +108,7 @@ uint16_t si705x_measure(int32_t* error)
 	int32_t			err;
     uint8_t         buf[3];
 	uint8_t			Reg    = TEMP_MEASURE_NOHOLD;
-	
+
     msg.addr   = si705x_sync.slave_addr;
 	msg.len    = 1;
 	msg.flags  = 0;
@@ -133,7 +137,7 @@ uint16_t si705x_measure(int32_t* error)
         }
         else {
             *error = -2;
-        }   
+        }
     }
 
 	return (buf[0] << 8) | buf[1];
@@ -142,14 +146,14 @@ uint16_t si705x_measure(int32_t* error)
 bool si705x_voltage_ok()
 {
 	bool retval = false;
-	
+
 	if (readReg(TEMP_READ_USER1) & TEMP_VDD_LOW){
 		retval = false;
 	}
 	else{
 		retval = true;
 	}
-	
+
 	return retval;
 }
 

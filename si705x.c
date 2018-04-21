@@ -1,5 +1,7 @@
 #include "si705x.h"
 
+#define TEMP_GET_TIMEOUT        (250)   // the number of times to attempt a temp reading. More needed for higher temps
+
 static struct i2c_m_sync_desc si705x_sync;
 
 /* read a single register */
@@ -75,7 +77,7 @@ uint16_t si705x_measure_asyncGet(int32_t* error)
 {
     struct _i2c_m_msg msg;
     int32_t			err;
-    int32_t         timeout = 5;
+    int32_t         timeout = TEMP_GET_TIMEOUT;
     uint8_t         buf[3];
 
     msg.addr   = si705x_sync.slave_addr;

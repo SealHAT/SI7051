@@ -13,9 +13,9 @@
  * parameter.
  *
  * @param WIRE_I2C [IN] The device structure to use for the sensor (I2C Synchronous)
- * @return True if successful, false if not. Any error is likely due to I2C
+ * @return ERR_NONE if successful, system error otherwise
  */
-bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C);
+int32_t si705x_init(struct i2c_m_sync_desc* const WIRE_I2C);
 
 /** @brief Set the resolution of the temperature sensor
  *
@@ -26,18 +26,18 @@ bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C);
  *     - TEMP_RES_14 -> 14 bits of resolution (.011 degrees, max 92Hz)
  *
  * @param RES [IN] The resolution to set the sensor to
- * @return True if successful, false if not. Any error is likely due to I2C
+ * @return ERR_NONE if successful, system error otherwise
  */
-bool si705x_set_resolution(const uint8_t RES);
+int32_t si705x_set_resolution(const uint8_t RES);
 
 /** @brief request a measurement from the sensor asynchronously
  *
- * A reading will take approx 7-8 mSec at full resolution. This function takes about
- * 100uSec (tested on 12MHz core with 400k I2C bus). the remaining time can be used
- * to run other tasks. The function si705x_measure_asyncGet() must be called later
- * to obtain the reading.
+ * A reading will take approx 7-8 mSec at full resolution and room temperature.
+ * This function takes about 100uSec (tested on 12MHz core with 400k I2C bus).
+ * The remaining time can be used to run other tasks.
+ * The function si705x_measure_asyncGet() must be called later to obtain the reading.
  *
- * @return 0 if successful, otherwise an error value
+ * @return ERR_NONE if successful, system error otherwise
  */
 int32_t si705x_measure_asyncStart(void);
 
@@ -45,18 +45,22 @@ int32_t si705x_measure_asyncStart(void);
  *
  * This function gets a previously requested asynchronous measurement. If the reading is not
  * ready yet (was called too early) this function will block until the reading is ready and read.
+ * the amount of time to block can be set with the timeout parameter. A reading should take
+ * from 6-8ms, so if this is called after a 5ms delay a timeout value of ~250 works well.
  *
- * @param error [OUT] pointer to an int32_t value to catch errors. 0 on success, -1 is comm error, -2 is failed CRC.
- * @return the raw reading from the sensor
+ * @param reading [OUT] pointer to a storage location for the raw reading
+ * @param timeout [IN] The number of times to try reading, will always try at least once.
+ * @param doCRC [IN] CRC is expensive, so it will only do it if asked.
+ * @return ERR_NONE if successful, or system error code. ERR_BAD_DATA for a failed CRC.
  */
-uint16_t si705x_measure_asyncGet(int32_t* err);
+int32_t si705x_measure_asyncGet(uint16_t* reading, int32_t timeout, const bool doCRC);
 
 /** @brief Obtain a temperature measurement from the sensor synchronously
  *
  * @param error [OUT] pointer to an int32_t value to catch errors. 0 on success, -1 is comm error, -2 is failed CRC.
  * @return the raw reading from the sensor
  */
-uint16_t si705x_measure(int32_t* error);
+int32_t si705x_measure(uint16_t* reading, const bool doCRC);
 
 /** @brief convert a raw reading into degrees Celsius
  *

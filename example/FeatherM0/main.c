@@ -13,21 +13,21 @@ int main(void)
 	uint16_t reading;
 
     int32_t err;
-	
+
 	/* Initializes MCU, drivers and middleware */
 	atmel_start_init();
 	si705x_init(&wire);
-	
+
 	for(;;) {
         if(usb_state() == USB_Configured) {
 		    /* Turn on LED if the DTR signal is set (serial terminal open on host) */
 		    gpio_set_pin_level(LED_BUILTIN, usb_dtr());
-		
-		    reading = si705x_measure(&err);
+
+		    err     = si705x_measure(&reading, true);
 		    celc    = si705x_celsius(reading);
 		    whole   = (int)celc;
 		    decimal = (celc * TEMP_PRECISION) - (whole * TEMP_PRECISION);
-			
+
             if(err < 0) {
 		        sprintf(message, "%d.%d,0x%.4X,INVALID\n",whole, decimal, reading);
 		    }
@@ -37,7 +37,7 @@ int main(void)
 
 		    /* If the host has a terminal open then try to read, and if we read send it back */
 		    if(usb_dtr()) {
-                do {					
+                do {
 			    err = usb_write(message, strlen(message));
                 } while(err < 0);
 		    }

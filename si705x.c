@@ -1,35 +1,35 @@
 #include "si705x.h"
 
-#define TEMP_GET_TIMEOUT        (250)   // the number of times to attempt a temp reading. More needed for higher temps
-
 static struct i2c_m_sync_desc si705x_sync;
 
 /* read a single register */
-static uint8_t readReg(const uint8_t REG)
+static inline int32_t readReg(const uint8_t REG, uint8_t* data)
 {
-    uint8_t retval;
-    i2c_m_sync_cmd_read(&si705x_sync, REG, &retval, 1);
-    return retval;
+    return i2c_m_sync_cmd_read(&si705x_sync, REG, data, 1);
 }
 
 /* write a single register */
-static void writeReg(const uint8_t REG, uint8_t val)
+static inline int32_t writeReg(const uint8_t REG, uint8_t val)
 {
-    i2c_m_sync_cmd_write(&si705x_sync, REG, &val, 1);
+    return i2c_m_sync_cmd_write(&si705x_sync, REG, &val, 1);
 }
 
-bool si705x_init(struct i2c_m_sync_desc* const WIRE_I2C)
+int32_t si705x_init(struct i2c_m_sync_desc* const WIRE_I2C)
 {
+    int32_t err;        // err return value
+
 	si705x_sync = *WIRE_I2C;
-	i2c_m_sync_enable(&si705x_sync);
-	i2c_m_sync_set_slaveaddr(&si705x_sync, TEMP_ADDR, I2C_M_SEVEN);
-	return true;
+	err = i2c_m_sync_enable(&si705x_sync);
+
+    if(!err) {
+	    err = i2c_m_sync_set_slaveaddr(&si705x_sync, TEMP_ADDR, I2C_M_SEVEN);
+    }
+    return err;
 }
 
-bool si705x_set_resolution(const SI705X_RESOLUTIONS_t RES)
+int32_t si705x_set_resolution(const SI705X_RESOLUTIONS_t RES)
 {
-	writeReg(TEMP_WRITE_USER1, RES);
-	return true;
+	return writeReg(TEMP_WRITE_USER1, RES);
 }
 
 static uint8_t bitswap(uint8_t input){
@@ -63,7 +63,7 @@ static uint8_t crc8(void* inData, uint8_t len, uint8_t init){
 int32_t si705x_measure_asyncStart(void)
 {
     struct _i2c_m_msg msg;
-    uint8_t			Reg    = TEMP_MEASURE_NOHOLD;
+    uint8_t	Reg = TEMP_MEASURE_NOHOLD;
 
     msg.addr   = si705x_sync.slave_addr;
     msg.len    = 1;
@@ -73,12 +73,11 @@ int32_t si705x_measure_asyncStart(void)
     return _i2c_m_sync_transfer(&si705x_sync.device, &msg);
 }
 
-uint16_t si705x_measure_asyncGet(int32_t* error)
+int32_t si705x_measure_asyncGet(uint16_t* reading, int32_t timeout, const bool doCRC)
 {
-    struct _i2c_m_msg msg;
-    int32_t			err;
-    int32_t         timeout = TEMP_GET_TIMEOUT;
-    uint8_t         buf[3];
+    struct _i2c_m_msg msg;      // I2C transfer struct
+    int32_t	err;                // error return value
+    uint8_t buf[3];             // data buffer
 
     msg.addr   = si705x_sync.slave_addr;
     msg.flags  = I2C_M_STOP | I2C_M_RD;
@@ -87,86 +86,54 @@ uint16_t si705x_measure_asyncGet(int32_t* error)
 
     do{
         err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);
-    } while (err != 0 && timeout-- > 0);
+    } while (err != ERR_NONE && timeout-- > 0);
 
-    if(error != NULL) {
-        if(err != ERR_NONE) {
-            *error = err;
-        }
-        else if(crc8(buf, 2, 0x00) == buf[2]) {
-            *error = 0;
-        }
-        else {
-            *error = ERR_BAD_DATA;
+    // CRC is expensive, so only do it if requested and no other errors.
+    if(!err && doCRC) {
+        if( !(crc8(buf, 2, 0x00) == buf[2]) ) {
+            err = ERR_BAD_DATA;
         }
     }
 
-    return (buf[0] << 8) | buf[1];
+    *reading = (buf[0] << 8) | buf[1];
+
+    return err;
 }
 
-uint16_t si705x_measure(int32_t* error)
+int32_t si705x_measure(uint16_t* reading, const bool doCRC)
 {
-	struct _i2c_m_msg msg;
-	int32_t			err;
-    uint8_t         buf[3];
-	uint8_t			Reg    = TEMP_MEASURE_NOHOLD;
+	int32_t err = si705x_measure_asyncStart();
 
-    msg.addr   = si705x_sync.slave_addr;
-	msg.len    = 1;
-	msg.flags  = 0;
-	msg.buffer = &Reg;
-
-	err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);
-
-	if (err != 0) {
-		/* error occurred */
-        if(error != NULL) {
-		    *error = -1;
-        }
-        return 0;
-	}
-
-	msg.flags  = I2C_M_STOP | I2C_M_RD;
-	msg.buffer = buf;
-	msg.len    = 3;     // two for temp, 3 for temp plus checksum
-	do{
-		err = _i2c_m_sync_transfer(&si705x_sync.device, &msg);
-	} while (err != 0);
-
-    if(error != NULL) {
-        if(crc8(buf, 2, 0x00) == buf[2]) {
-            *error = 0;
-        }
-        else {
-            *error = -2;
-        }
+    if(!err) {
+        err = si705x_measure_asyncGet(reading, 2500, doCRC);
     }
 
-	return (buf[0] << 8) | buf[1];
+    return err;
 }
 
 bool si705x_voltage_ok()
 {
-	bool retval = false;
+    int32_t err;    // error return values
+	uint8_t data;   // data to get from I2C
 
-	if (readReg(TEMP_READ_USER1) & TEMP_VDD_LOW){
-		retval = false;
-	}
-	else{
-		retval = true;
-	}
+    err = readReg(TEMP_READ_USER1, &data);
 
-	return retval;
+    return (err != ERR_NONE || (data & TEMP_VDD_LOW));
 }
 
 uint8_t si705x_fw_version()
 {
-    uint8_t fwVer = 0;
-	if (readReg(TEMP_READ_FW_VER1) == TEMP_FW1){
-		fwVer = TEMP_FW1;
-	}else if (readReg(TEMP_READ_FW_VER2) == TEMP_FW2){
-		fwVer = TEMP_FW2;
-	}
+    uint8_t fwVer;  // data to get from I2C
+
+    readReg(TEMP_READ_FW_VER1, &fwVer);
+
+    if(TEMP_FW1 != fwVer) {
+        readReg(TEMP_READ_FW_VER2, &fwVer);
+        if(TEMP_FW2 != fwVer) {
+            fwVer = 0;
+        }
+    }
+
     return fwVer;
 }
 

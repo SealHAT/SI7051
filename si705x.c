@@ -111,7 +111,7 @@ int32_t si705x_measure(uint16_t* reading, const bool doCRC)
     return err;
 }
 
-bool si705x_voltage_ok()
+int32_t si705x_voltage_ok()
 {
     int32_t err;    // error return values
 	uint8_t data;   // data to get from I2C

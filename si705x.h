@@ -1,9 +1,8 @@
 #ifndef __SI705X_H__
 #define __SI705X_H__
 
-#include <atmel_start.h>    /* where the IO functions live */
+#include "hal_i2c_m_sync.h" // device specific IO functions
 #include <stdint.h>
-#include <stdbool.h>
 #include "si705xTypes.h"
 
 /** @brief initializes the temperature sensor data structures
@@ -75,9 +74,9 @@ static inline float si705x_celsius(const uint16_t READING) { return ((175.72 * R
  * sensor will cease to operate at 1.8 volts. Therefore if this function returns
  * false then the voltage is between 1.8V and 1.9V and action should be taken.
  *
- * @return true if the voltage is ok
+ * @return non-zero if the voltage is OK, 0 if the voltage is low
  */
-bool si705x_voltage_ok();
+int32_t si705x_voltage_ok();
 
 /** @brief Gets the firmware version of the device
  *

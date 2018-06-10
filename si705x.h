@@ -3,7 +3,6 @@
 
 #include "hal_i2c_m_sync.h" // device specific IO functions
 #include <stdint.h>
-#include "si705xTypes.h"
 
 /** @brief initializes the temperature sensor data structures
  *

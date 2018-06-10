@@ -1,4 +1,5 @@
 #include "si705x.h"
+#include "si705x_private.h"
 
 static struct i2c_m_sync_desc si705x_sync;
 

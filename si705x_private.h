@@ -1,6 +1,6 @@
 // Data types used by the 44009 light sensor
-#ifndef __SI705X_TYPES_H__
-#define __SI705X_TYPES_H__
+#ifndef __SI705X_PRIVATE_H__
+#define __SI705X_PRIVATE_H__
 
 /**
  * 7-bit I2C slave address for the SI7051 is static
